@@ -8,7 +8,7 @@ const storage = multer.diskStorage({
         cb(null, './public/images/')
     },
     filename: (req, file, callback) => {
-        callback(null, new Date().now + file.originalname)
+        callback(null, Date.now() + '-' + file.originalname)
     }
 })
 
@@ -31,27 +31,42 @@ const users = [
         lastname: 'dkfzxcvjdf'
     }
 ]
-router.get('/', (req, res) => {
-    res.render('users', {users})
+router.get('/', async (req, res) => {
+    const users = await db.query(`select * from users_table;`)
+    res.render('users', {users: users.rows})
 })
 
 router.get('/create', (req, res) => {
     res.render('createuser', {firstname: 'My name'})
 })
 
-router.post('/create', (req, res) => {
-    console.log(req.body)
-    const {firstname, lastname} = req.body
-    users.push({firstname, lastname})
-    upload(req, res, (err) => {
-        if(err){
-           return res.send('Error uploading file')
+router.get('/list', async (req, res) => {
+    const users = await db.query(`select * from users_table;`)
+    console.log(users)
+    res.status(200).json(users.rows)
+})
 
-        }
-        console.log('File uploaded successfully.')
-        return res.render('users', {users})
-    })
-    // res.send('User create')
+router.post('/create', async (req, res) => {
+    console.log(req.body)
+    const {firstname, lastname, username} = req.body
+    // users.push({firstname, lastname, username})
+    const user = await db.query(`select * from users_table where username = '${username}';`)
+    console.log('Users', user)
+    if(user.rows.length) {
+        return res.status(400).send('User already exists.')
+    }
+    const newUser = await db.query(`insert into users_table(firstname, lastname, username) values('${firstname}', '${lastname}', '${username}')`)
+    console.log(newUser)
+
+    // upload(req, res, (err) => {
+    //     if(err){
+    //        return res.send('Error uploading file')
+
+    //     }
+    //     console.log('File uploaded successfully.')
+    //     return res.render('users', {users})
+    // })
+    res.send('User create')
 })
 
 // router.post('/', async (req, res) => {

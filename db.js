@@ -9,7 +9,7 @@ const pool = new Pool({
 })
 
 const createUserTable = () => {
-    return pool.query('create table if not exists users(id int primary key, name varchar(30), age int)', (err, results) => {
+    return pool.query('create table if not exists users_table(id serial primary key, firstname varchar(30), lastname varchar(30), username varchar(20))', (err, results) => {
         if(err){
             console.log('ERR: ', err)
         }
@@ -20,16 +20,16 @@ const createUserTable = () => {
 
 const addUser = async (userId, name, age) => {
     let response;
-    const query = await pool.query(`insert into users(id, name, age) values(${userId}, '${name}', ${age})`, (err, results) => {
-        if(err){
+    const query = pool.query(`insert into users(id, name, age) values(${userId}, '${name}', ${age})`, (err, results) => {
+        if (err) {
             console.log(err)
             response = false
         }
-        console.log('User', results)
+        console.log('User ', results)
         response = true
     })
 
     return response
 }
-
+// createUserTable()
 module.exports = pool
