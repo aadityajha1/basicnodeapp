@@ -48,14 +48,14 @@ router.get('/list', async (req, res) => {
 
 router.post('/create', async (req, res) => {
     console.log(req.body)
-    const {firstname, lastname, username} = req.body
+    const {firstname, lastname, username, role} = req.body
     // users.push({firstname, lastname, username})
     const user = await db.query(`select * from users_table where username = '${username}';`)
     console.log('Users', user)
     if(user.rows.length) {
         return res.status(400).send('User already exists.')
     }
-    const newUser = await db.query(`insert into users_table(firstname, lastname, username) values('${firstname}', '${lastname}', '${username}')`)
+    const newUser = await db.query(`insert into users_table(firstname, lastname, username, role) values('${firstname}', '${lastname}', '${username}', '${role}')`)
     console.log(newUser)
 
     // upload(req, res, (err) => {

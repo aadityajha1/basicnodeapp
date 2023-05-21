@@ -14,25 +14,44 @@ app.use(express.json())
 const usersRouter = require('./routes/users');
 const pool = require('./db');
 
-const authHelper = (req, res, next) => {
-    try{
-        const authToken = req.headers.authorization.split(' ')[1];
-        console.log('Token', authToken)
-        console.log('Secret:: ', process.env.JWT_SECRET)
-        const cookieToken = req.signedCookies['authToken'] //req.signedCookies['name']
-        console.log('Cookie token', cookieToken)
-        const decodeToken = jsonwebtoken.verify(authToken, process.env.JWT_SECRET)
-        console.log('Decoded token  ', decodeToken)
-        next()
-    }catch(err){
-        console.log(err)
-        return res.status(401).send('User Unauthorized')
+const roles = [
+    'ADMIN', 'USER'
+]
+
+const authHelper = (role) => {
+
+    return async (req, res, next) => {
+        try{
+            console.log(role)
+            const authToken = req.headers.authorization.split(' ')[1];
+            console.log('Token', authToken)
+            console.log('Secret:: ', process.env.JWT_SECRET)
+            const cookieToken = req.signedCookies['authToken'] //req.signedCookies['name']
+            console.log('Cookie token', cookieToken)
+            const decodeToken = jsonwebtoken.verify(authToken, process.env.JWT_SECRET)
+            console.log('Decoded token ', decodeToken)
+
+            const userResult = await pool.query(`select * from users_table where username = '${decodeToken.username}'`)
+            const user = userResult.rows[0]
+            console.log(user)
+            if(user.role !== role){
+                return res.status(401).send('You are not authoried to access this API.')
+            }
+            req.user = user
+            next()
+        }catch(err){
+            console.log(err)
+            return res.status(401).send('User Unauthorized')
+        }
     }
 }
 
-app.post('/login', (req, res) => {
+app.post('/login', async (req, res) => {
     const {username, password} = req.body
-    if(username == 'admin' && password === 'admin'){
+    const userResult = await pool.query(`select * from users_table where username = '${username}'`)
+    const user = userResult.rows[0]
+    console.log(user)
+    if(user.username == username && password === 'admin123'){
         const token = jsonwebtoken.sign({username}, process.env.JWT_SECRET)
         console.log(token)
         res.cookie('authToken', token, {maxAge: 10000, signed: true})
@@ -42,7 +61,7 @@ app.post('/login', (req, res) => {
 })
 // app.use(authHelper)
 
-app.get('/getAll', authHelper, async (req, res) => {
+app.get('/getAll', authHelper('ADMIN'), async (req, res) => {
     const users = await  pool.query('select * from users_table;')
     // console.log(users)
     return res.json(users.rows)

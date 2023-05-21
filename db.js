@@ -9,7 +9,7 @@ const pool = new Pool({
 })
 
 const createUserTable = () => {
-    return pool.query('create table if not exists users_table(id serial primary key, firstname varchar(30), lastname varchar(30), username varchar(20))', (err, results) => {
+    return pool.query('create table if not exists users_table(id serial primary key, firstname varchar(30), lastname varchar(30), username varchar(20), role varchar(10))', (err, results) => {
         if(err){
             console.log('ERR: ', err)
         }
@@ -31,5 +31,5 @@ const addUser = async (userId, name, age) => {
 
     return response
 }
-// createUserTable()
+createUserTable()
 module.exports = pool
