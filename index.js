@@ -12,8 +12,8 @@ app.use(express.urlencoded({extended: true}))
 app.use(cookieParser(process.env.COOKIE_SECRET))
 app.use(express.json())
 const usersRouter = require('./routes/users');
-const pool = require('./db');
-
+const {testConnection} = require('./db');
+testConnection()
 const roles = [
     'ADMIN', 'USER'
 ]

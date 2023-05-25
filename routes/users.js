@@ -2,6 +2,7 @@ const express = require('express')
 const router = express.Router();
 const db = require('../db')
 const multer = require('multer')
+const UsersSchema = require('../users')
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -41,32 +42,40 @@ router.get('/create', (req, res) => {
 })
 
 router.get('/list', async (req, res) => {
-    const users = await db.query(`select * from users_table;`)
+    const users = await UsersSchema.findAll({order: [
+        ['id', 'DESC']
+    ]})
     console.log(users)
-    res.status(200).json(users.rows)
+    res.status(200).json(users)
 })
 
 router.post('/create', async (req, res) => {
-    console.log(req.body)
-    const {firstname, lastname, username, role} = req.body
-    // users.push({firstname, lastname, username})
-    const user = await db.query(`select * from users_table where username = '${username}';`)
-    console.log('Users', user)
-    if(user.rows.length) {
-        return res.status(400).send('User already exists.')
-    }
-    const newUser = await db.query(`insert into users_table(firstname, lastname, username, role) values('${firstname}', '${lastname}', '${username}', '${role}')`)
-    console.log(newUser)
+    try{
 
-    // upload(req, res, (err) => {
-    //     if(err){
-    //        return res.send('Error uploading file')
-
-    //     }
-    //     console.log('File uploaded successfully.')
-    //     return res.render('users', {users})
-    // })
-    res.send('User create')
+        console.log(req.body)
+        const {firstname, lastname, username, role} = req.body
+        // users.push({firstname, lastname, username})
+        // const user = await db.query(`select * from users_table where username = '${username}';`)
+        const user = await UsersSchema.findOne({where: {username}})
+        // await user.save()
+        console.log('Users', user)
+        if(user) {
+            return res.status(400).send('User already exists.')
+        }
+        const newUser = await UsersSchema.create({username, lastname, firstname, role})
+        console.log(newUser)
+    
+        // upload(req, res, (err) => {
+        //     if(err){
+        //        return res.send('Error uploading file')
+    
+        //     }
+        //     console.log('File uploaded successfully.')
+        //     return res.render('users', {users})
+        // })
+        res.send('User created')
+    }catch (e) {console.error(e)
+    res.status(400).send('Error creating User')}
 })
 
 // router.post('/', async (req, res) => {
